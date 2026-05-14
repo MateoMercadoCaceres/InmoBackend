@@ -24,6 +24,17 @@ async function create(payload) {
   return data
 }
 
+async function findById(id) {
+  const { data, error } = await supabase
+    .from('property_media')
+    .select(FIELDS)
+    .eq('id', id)
+    .maybeSingle()
+
+  if (error) throw new DatabaseError(error.message)
+  return data
+}
+
 async function remove(id) {
   const { error } = await supabase
     .from('property_media')
@@ -33,4 +44,4 @@ async function remove(id) {
   if (error) throw new DatabaseError(error.message)
 }
 
-module.exports = { findByProperty, create, remove }
+module.exports = { findByProperty, findById, create, remove }

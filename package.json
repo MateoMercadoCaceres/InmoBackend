@@ -21,9 +21,12 @@
   "homepage": "https://github.com/MateoMercadoCaceres/InmoBackend#readme",
   "dependencies": {
     "@supabase/supabase-js": "^2.105.4",
+    "archiver": "^8.0.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "googleapis": "^171.4.0",
+    "multer": "^2.1.1",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "xlsx": "^0.18.5"
