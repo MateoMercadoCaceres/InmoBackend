@@ -127,6 +127,36 @@ router.post('/folders/:folderId/upload', upload.array('files', 20), driveMediaCo
 
 /**
  * @swagger
+ * /admin/drive/folders/{folderId}/upload-raw:
+ *   post:
+ *     summary: Upload files to a Drive folder WITHOUT creating property_media records (e.g. advisor photos)
+ *     tags: [Drive]
+ *     parameters:
+ *       - in: path
+ *         name: folderId
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required: [files]
+ *             properties:
+ *               files:
+ *                 type: array
+ *                 items: { type: string, format: binary }
+ *     responses:
+ *       201:
+ *         description: Files uploaded; returns drive_file_id per file
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ */
+router.post('/folders/:folderId/upload-raw', upload.array('files', 20), driveMediaController.uploadRaw)
+
+/**
+ * @swagger
  * /admin/drive/media/{mediaId}:
  *   delete:
  *     summary: Delete a media item from Drive and from property_media
