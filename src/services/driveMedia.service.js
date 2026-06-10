@@ -56,6 +56,29 @@ async function uploadMedia(folderId, files, property_id, media_type) {
   return results
 }
 
+// Uploads files to a Drive folder WITHOUT creating property_media records.
+// Used for assets not tied to a property (e.g. advisor profile photos).
+async function uploadRaw(folderId, files) {
+  const drive = await getDriveClient()
+  const results = []
+
+  for (const file of files) {
+    const { data: driveFile } = await drive.files.create({
+      requestBody: { name: file.originalname, parents: [folderId] },
+      media: { mimeType: file.mimetype, body: Readable.from(file.buffer) },
+      fields: 'id, name, webViewLink, webContentLink, size'
+    })
+
+    results.push({
+      drive_file_id: driveFile.id,
+      name: driveFile.name,
+      media_folder_url: driveFile.webViewLink
+    })
+  }
+
+  return results
+}
+
 function extractFileId(url) {
   const match = url.match(/\/file\/d\/([^/]+)\//)
   if (!match) throw new AppError(`Cannot extract Drive file ID from URL: ${url}`, 400)
@@ -123,6 +146,7 @@ module.exports = {
   createFolder,
   listFolder,
   uploadMedia,
+  uploadRaw,
   deleteMedia,
   getFileStream,
   createFolderZipStream

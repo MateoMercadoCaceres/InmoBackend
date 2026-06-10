@@ -35,6 +35,13 @@ const uploadMedia = asyncHandler(async (req, res) => {
   sendSuccess(res, result, 201)
 })
 
+const uploadRaw = asyncHandler(async (req, res) => {
+  if (!req.files || req.files.length === 0) throw new ValidationError('At least one file is required')
+
+  const result = await driveMediaService.uploadRaw(req.params.folderId, req.files)
+  sendSuccess(res, result, 201)
+})
+
 const deleteMedia = asyncHandler(async (req, res) => {
   await driveMediaService.deleteMedia(req.params.mediaId)
   res.status(204).send()
@@ -62,6 +69,7 @@ module.exports = {
   createFolder,
   listFolderFiles,
   uploadMedia,
+  uploadRaw,
   deleteMedia,
   downloadFile,
   downloadFolder
