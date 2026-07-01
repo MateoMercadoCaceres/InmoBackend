@@ -16,6 +16,13 @@ const options = {
           properties: {
             id: { type: 'integer', example: 1 },
             type_id: { type: 'integer', example: 2 },
+            title: { type: 'string', example: 'Casa en zona norte' },
+            category: {
+              type: 'string',
+              nullable: true,
+              enum: ['Casa', 'Departamento', 'Monoambiente', 'Garzonier', 'Penthouse', 'Local', 'Oficina', 'Terreno', 'Estacionamiento'],
+              example: 'Departamento'
+            },
             user_id: { type: 'integer', example: 1 },
             captor: { type: 'string', example: 'Juan Pérez' },
             description: { type: 'string', example: 'Casa en zona norte' },
@@ -27,18 +34,36 @@ const options = {
             capturing_agent: { type: 'string', example: 'Agente A' },
             selling_agent: { type: 'string', example: 'Agente B' },
             observations: { type: 'string' },
-            capture_date: { type: 'string', format: 'date', example: '2024-01-15' },
             closing_date: { type: 'string', format: 'date', example: '2024-06-30' },
             priority: { type: 'integer', enum: [1, 2, 3], example: 1 },
             ad_image_available: { type: 'boolean', example: false },
+            is_visible: { type: 'boolean', example: true, description: 'When false, hidden from the public catalog' },
+            created_at: { type: 'string', format: 'date-time' }
+          }
+        },
+        PropertyDriveFolders: {
+          type: 'object',
+          properties: {
+            id: { type: 'integer', example: 1 },
+            property_id: { type: 'integer', example: 5 },
+            drive_folder_id: { type: 'string', example: '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs' },
+            arts_folder_id: { type: 'string', example: '1CyjNWt1YRB6oGNeLwCcAKkhVVrqumctd' },
+            img_folder_id: { type: 'string', example: '1DzkOXu2ZSC7pHOfMxDdBLlixWsrvnduf' },
             created_at: { type: 'string', format: 'date-time' }
           }
         },
         PropertyInput: {
           type: 'object',
-          required: ['type_id', 'captor', 'description', 'availability_status'],
+          required: ['type_id', 'title', 'captor', 'description', 'availability_status'],
           properties: {
             type_id: { type: 'integer', example: 2 },
+            title: { type: 'string', example: 'Casa en zona norte' },
+            category: {
+              type: 'string',
+              nullable: true,
+              enum: ['Casa', 'Departamento', 'Monoambiente', 'Garzonier', 'Penthouse', 'Local', 'Oficina', 'Terreno', 'Estacionamiento'],
+              example: 'Departamento'
+            },
             user_id: { type: 'integer', example: 1 },
             captor: { type: 'string', example: 'Juan Pérez' },
             description: { type: 'string', example: 'Casa en zona norte' },
@@ -50,10 +75,10 @@ const options = {
             capturing_agent: { type: 'string' },
             selling_agent: { type: 'string' },
             observations: { type: 'string' },
-            capture_date: { type: 'string', format: 'date' },
             closing_date: { type: 'string', format: 'date' },
             priority: { type: 'integer', enum: [1, 2, 3] },
-            ad_image_available: { type: 'boolean', default: false }
+            ad_image_available: { type: 'boolean', default: false },
+            is_visible: { type: 'boolean', default: true }
           }
         },
         StatusUpdate: {
@@ -91,7 +116,7 @@ const options = {
             id: { type: 'integer', example: 1 },
             name: { type: 'string', example: 'María García' },
             email: { type: 'string', format: 'email', example: 'maria@inmobiliaria.com' },
-            role: { type: 'string', enum: ['admin', 'editor'] }
+            role: { type: 'string', enum: ['admin', 'editor', 'advisor', 'user'] }
           }
         },
         UserInput: {
@@ -100,7 +125,15 @@ const options = {
           properties: {
             name: { type: 'string', example: 'María García' },
             email: { type: 'string', format: 'email', example: 'maria@inmobiliaria.com' },
-            role: { type: 'string', enum: ['admin', 'editor'] }
+            role: { type: 'string', enum: ['admin', 'editor', 'advisor', 'user'] }
+          }
+        },
+        UserUpdateInput: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', example: 'María García' },
+            email: { type: 'string', format: 'email', example: 'maria@inmobiliaria.com' },
+            role: { type: 'string', enum: ['admin', 'editor', 'advisor', 'user'] }
           }
         },
         PaginationMeta: {

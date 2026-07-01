@@ -45,4 +45,25 @@ async function create(payload) {
   return data
 }
 
-module.exports = { findAll, findById, findByEmail, create }
+async function update(id, payload) {
+  const { data, error } = await supabase
+    .from('users')
+    .update(payload)
+    .eq('id', id)
+    .select(FIELDS)
+    .single()
+
+  if (error) throw new DatabaseError(error.message)
+  return data
+}
+
+async function remove(id) {
+  const { error } = await supabase
+    .from('users')
+    .delete()
+    .eq('id', id)
+
+  if (error) throw new DatabaseError(error.message)
+}
+
+module.exports = { findAll, findById, findByEmail, create, update, remove }

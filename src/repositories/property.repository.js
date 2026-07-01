@@ -2,11 +2,28 @@ const { supabase } = require('../config/supabase')
 const DatabaseError = require('../errors/DatabaseError')
 
 const FIELDS = [
-  'id', 'type_id', 'captor', 'description', 'availability_status',
+  'id', 'type_id', 'title', 'category', 'captor', 'description', 'availability_status',
   'square_meters', 'capturing_agent', 'selling_agent', 'observations',
-  'capture_date', 'closing_date', 'priority', 'user_id',
-  'ad_image_available', 'created_at'
+  'closing_date', 'priority', 'user_id',
+  'ad_image_available', 'is_visible', 'created_at'
 ].join(', ')
+
+// id/created_at are server-controlled — everything else here is safe to insert/update.
+// Any other key on the incoming payload (e.g. a stale field a client still sends) is
+// silently dropped instead of blowing up the whole request with a schema-cache error.
+const WRITABLE_FIELDS = [
+  'type_id', 'title', 'category', 'captor', 'description', 'availability_status',
+  'square_meters', 'capturing_agent', 'selling_agent', 'observations',
+  'closing_date', 'priority', 'user_id', 'ad_image_available', 'is_visible'
+]
+
+function pickWritable(payload) {
+  const result = {}
+  for (const key of WRITABLE_FIELDS) {
+    if (payload[key] !== undefined) result[key] = payload[key]
+  }
+  return result
+}
 
 async function findAll({ limit, offset, filters }) {
   let query = supabase
@@ -39,7 +56,7 @@ async function findById(id) {
 async function create(payload) {
   const { data, error } = await supabase
     .from('properties')
-    .insert(payload)
+    .insert(pickWritable(payload))
     .select(FIELDS)
     .single()
 
@@ -50,7 +67,7 @@ async function create(payload) {
 async function update(id, payload) {
   const { data, error } = await supabase
     .from('properties')
-    .update(payload)
+    .update(pickWritable(payload))
     .eq('id', id)
     .select(FIELDS)
     .single()
