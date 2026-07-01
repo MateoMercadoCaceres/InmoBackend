@@ -1,15 +1,22 @@
 const { ALLOWED_STATUSES } = require('../constants/propertyStatuses')
+const { ALLOWED_CATEGORIES } = require('../constants/propertyCategories')
 const ValidationError = require('../errors/ValidationError')
 
 function validateCreateProperty(req, res, next) {
-  const { type_id, availability_status } = req.body
+  const { type_id, title, availability_status, category } = req.body
 
   if (!type_id) throw new ValidationError('type_id is required')
+
+  if (!title) throw new ValidationError('title is required')
 
   if (availability_status && !ALLOWED_STATUSES.includes(availability_status)) {
     throw new ValidationError(
       `availability_status must be one of: ${ALLOWED_STATUSES.join(', ')}`
     )
+  }
+
+  if (category && !ALLOWED_CATEGORIES.includes(category)) {
+    throw new ValidationError(`category must be one of: ${ALLOWED_CATEGORIES.join(', ')}`)
   }
 
   next()

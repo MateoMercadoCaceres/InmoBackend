@@ -18,4 +18,22 @@ async function createUser(payload) {
   return userRepository.create(payload)
 }
 
-module.exports = { listUsers, getUser, createUser }
+async function updateUser(id, payload) {
+  await getUser(id)
+
+  if (payload.email) {
+    const existing = await userRepository.findByEmail(payload.email)
+    if (existing && String(existing.id) !== String(id)) {
+      throw new ValidationError(`User with email ${payload.email} already exists`)
+    }
+  }
+
+  return userRepository.update(id, payload)
+}
+
+async function deleteUser(id) {
+  await getUser(id)
+  await userRepository.remove(id)
+}
+
+module.exports = { listUsers, getUser, createUser, updateUser, deleteUser }

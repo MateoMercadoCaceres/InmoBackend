@@ -17,4 +17,14 @@ const createUser = asyncHandler(async (req, res) => {
   sendSuccess(res, user, 201)
 })
 
-module.exports = { listUsers, getUser, createUser }
+const updateUser = asyncHandler(async (req, res) => {
+  const user = await userService.updateUser(req.params.id, req.body)
+  sendSuccess(res, user)
+})
+
+const deleteUser = asyncHandler(async (req, res) => {
+  await userService.deleteUser(req.params.id)
+  res.status(204).send()
+})
+
+module.exports = { listUsers, getUser, createUser, updateUser, deleteUser }

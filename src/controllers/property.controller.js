@@ -17,6 +17,11 @@ const createProperty = asyncHandler(async (req, res) => {
   sendSuccess(res, property, 201)
 })
 
+const ensureDriveFolders = asyncHandler(async (req, res) => {
+  const driveFolders = await propertyService.ensureDriveFolders(req.params.id)
+  sendSuccess(res, driveFolders)
+})
+
 const updateProperty = asyncHandler(async (req, res) => {
   const property = await propertyService.updateProperty(req.params.id, req.body)
   sendSuccess(res, property)
@@ -36,6 +41,7 @@ module.exports = {
   listProperties,
   getProperty,
   createProperty,
+  ensureDriveFolders,
   updateProperty,
   updatePropertyStatus,
   deleteProperty

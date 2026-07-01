@@ -1,6 +1,6 @@
 const ValidationError = require('../errors/ValidationError')
 
-const ALLOWED_ROLES = ['admin', 'editor']
+const ALLOWED_ROLES = ['admin', 'editor', 'advisor', 'user']
 
 function validateCreateUser(req, res, next) {
   const { name, email, role } = req.body
@@ -16,4 +16,18 @@ function validateCreateUser(req, res, next) {
   next()
 }
 
-module.exports = { validateCreateUser }
+function validateUpdateUser(req, res, next) {
+  const { name, email, role } = req.body
+
+  if (name === undefined && email === undefined && role === undefined) {
+    throw new ValidationError('at least one of name, email, role is required')
+  }
+
+  if (role !== undefined && !ALLOWED_ROLES.includes(role)) {
+    throw new ValidationError(`role must be one of: ${ALLOWED_ROLES.join(', ')}`)
+  }
+
+  next()
+}
+
+module.exports = { validateCreateUser, validateUpdateUser, ALLOWED_ROLES }

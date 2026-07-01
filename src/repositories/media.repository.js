@@ -44,4 +44,13 @@ async function remove(id) {
   if (error) throw new DatabaseError(error.message)
 }
 
-module.exports = { findByProperty, findById, create, remove }
+async function removeByProperty(property_id) {
+  const { error } = await supabase
+    .from('property_media')
+    .delete()
+    .eq('property_id', property_id)
+
+  if (error) throw new DatabaseError(error.message)
+}
+
+module.exports = { findByProperty, findById, create, remove, removeByProperty }

@@ -79,7 +79,7 @@ router.get('/', propertyController.listProperties)
  *               type: object
  *               properties:
  *                 success: { type: boolean, example: true }
- *                 data: { $ref: '#/components/schemas/Property' }
+ *                 data: { $ref: '#/components/schemas/PropertyWithFolders' }
  *       404:
  *         $ref: '#/components/responses/NotFound'
  *       500:
@@ -107,11 +107,22 @@ router.get('/:id', propertyController.getProperty)
  *               type: object
  *               properties:
  *                 success: { type: boolean, example: true }
- *                 data: { $ref: '#/components/schemas/Property' }
+ *                 data: { $ref: '#/components/schemas/PropertyWithFolders' }
  *       400:
  *         $ref: '#/components/responses/BadRequest'
  *       500:
  *         $ref: '#/components/responses/InternalError'
+ */
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     PropertyWithFolders:
+ *       allOf:
+ *         - $ref: '#/components/schemas/Property'
+ *         - type: object
+ *           properties:
+ *             drive_folders: { $ref: '#/components/schemas/PropertyDriveFolders' }
  */
 router.post('/', validateCreateProperty, propertyController.createProperty)
 
@@ -147,6 +158,39 @@ router.post('/', validateCreateProperty, propertyController.createProperty)
  *         $ref: '#/components/responses/InternalError'
  */
 router.put('/:id', propertyController.updateProperty)
+
+/**
+ * @swagger
+ * /properties/{id}/drive-folders:
+ *   post:
+ *     summary: Get or create the Drive folders for a property
+ *     description: >
+ *       Properties created before the automatic-folder-provisioning feature don't have a
+ *       property_drive_folders row. This lazily creates the root/artes/img folders in Drive
+ *       for such properties and persists them. If the property already has folders, they are
+ *       returned as-is with no Drive calls.
+ *     tags: [Properties]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string, format: uuid }
+ *     responses:
+ *       200:
+ *         description: Existing or newly created Drive folders
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 data: { $ref: '#/components/schemas/PropertyDriveFolders' }
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/InternalError'
+ */
+router.post('/:id/drive-folders', propertyController.ensureDriveFolders)
 
 /**
  * @swagger
