@@ -7,6 +7,13 @@ const { ALLOWED_STATUSES } = require('../constants/propertyStatuses')
 const NotFoundError = require('../errors/NotFoundError')
 const ValidationError = require('../errors/ValidationError')
 const { parsePagination } = require('../utils/pagination')
+const { buildSlugAssignments } = require('../utils/propertySlug')
+
+async function attachSlugs(properties) {
+  const rows = await propertyRepository.findAllTitles()
+  const { idToSlug } = buildSlugAssignments(rows)
+  return properties.map((p) => ({ ...p, slug: idToSlug.get(p.id) }))
+}
 
 async function listProperties(query) {
   const { page, limit, offset } = parsePagination(query)
@@ -20,7 +27,13 @@ async function listProperties(query) {
   }
 
   const { data, count } = await propertyRepository.findAll({ limit, offset, filters })
-  return { data, meta: { page, limit, total: count } }
+
+  const folders = await propertyDriveFoldersRepository.findByProperties(data.map((p) => p.id))
+  const foldersByProperty = new Map(folders.map((f) => [f.property_id, f]))
+  const withDriveFolders = data.map((p) => ({ ...p, drive_folders: foldersByProperty.get(p.id) ?? null }))
+  const withSlugs = await attachSlugs(withDriveFolders)
+
+  return { data: withSlugs, meta: { page, limit, total: count } }
 }
 
 async function getProperty(id) {
@@ -29,6 +42,14 @@ async function getProperty(id) {
 
   const drive_folders = await propertyDriveFoldersRepository.findByProperty(id)
   return { ...property, drive_folders }
+}
+
+async function getPropertyBySlug(slug) {
+  const property = await propertyRepository.findBySlug(slug)
+  if (!property) throw new NotFoundError(`Property with slug "${slug}" not found`)
+
+  const drive_folders = await propertyDriveFoldersRepository.findByProperty(property.id)
+  return { ...property, drive_folders, slug }
 }
 
 async function createProperty(payload) {
@@ -52,7 +73,8 @@ async function createProperty(payload) {
       img_folder_id: imgFolder.id
     })
 
-    return { ...property, drive_folders }
+    const [withSlug] = await attachSlugs([{ ...property, drive_folders }])
+    return withSlug
   } catch (err) {
     await propertyRepository.remove(property.id)
     throw err
@@ -121,6 +143,7 @@ async function deleteProperty(id) {
 module.exports = {
   listProperties,
   getProperty,
+  getPropertyBySlug,
   createProperty,
   ensureDriveFolders,
   updateProperty,

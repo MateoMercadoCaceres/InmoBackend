@@ -26,6 +26,18 @@ async function findByProperty(property_id) {
   return data
 }
 
+async function findByProperties(propertyIds) {
+  if (!propertyIds.length) return []
+
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select(FIELDS)
+    .in('property_id', propertyIds)
+
+  if (error) throw new DatabaseError(error.message)
+  return data
+}
+
 async function removeByProperty(property_id) {
   const { error } = await supabase
     .from(TABLE)
@@ -35,4 +47,4 @@ async function removeByProperty(property_id) {
   if (error) throw new DatabaseError(error.message)
 }
 
-module.exports = { create, findByProperty, removeByProperty }
+module.exports = { create, findByProperty, findByProperties, removeByProperty }
