@@ -1,3 +1,4 @@
+const { Readable } = require('stream')
 const driveMediaService = require('../services/driveMedia.service')
 const asyncHandler = require('../utils/asyncHandler')
 const { sendSuccess } = require('../utils/response')
@@ -54,6 +55,33 @@ const downloadFile = asyncHandler(async (req, res) => {
   stream.pipe(res)
 })
 
+// Inline, cacheable, resized rendering endpoint — used as <img>/next/image src.
+// Distinct from downloadFile (which forces a save-as attachment and always streams
+// the full original) so browsers/CDNs can cache this response across requests and
+// sessions instead of re-hitting Drive on every render.
+const viewThumbnail = asyncHandler(async (req, res) => {
+  const { fileId } = req.params
+  const size = Math.min(Math.max(Number(req.query.size) || 400, 100), 2000)
+  const etag = `"${fileId}-${size}"`
+
+  res.setHeader('Cache-Control', 'public, max-age=604800, stale-while-revalidate=2592000')
+  res.setHeader('ETag', etag)
+
+  if (req.headers['if-none-match'] === etag) {
+    return res.status(304).end()
+  }
+
+  const thumb = await driveMediaService.getThumbnail(fileId, size)
+  if (thumb) {
+    res.setHeader('Content-Type', thumb.mimeType)
+    return Readable.fromWeb(thumb.stream).pipe(res)
+  }
+
+  const { stream, mimeType } = await driveMediaService.getFileStream(fileId)
+  res.setHeader('Content-Type', mimeType)
+  stream.pipe(res)
+})
+
 const downloadFolder = asyncHandler(async (req, res) => {
   const { stream, name } = await driveMediaService.createFolderZipStream(req.params.folderId)
   res.setHeader('Content-Disposition', `attachment; filename="${name}.zip"`)
@@ -72,5 +100,6 @@ module.exports = {
   uploadRaw,
   deleteMedia,
   downloadFile,
+  viewThumbnail,
   downloadFolder
 }

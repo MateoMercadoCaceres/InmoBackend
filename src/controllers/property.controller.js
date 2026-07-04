@@ -8,7 +8,10 @@ const listProperties = asyncHandler(async (req, res) => {
 })
 
 const getProperty = asyncHandler(async (req, res) => {
-  const property = await propertyService.getProperty(req.params.id)
+  const { id } = req.params
+  const property = /^\d+$/.test(id)
+    ? await propertyService.getProperty(id)
+    : await propertyService.getPropertyBySlug(id)
   sendSuccess(res, property)
 })
 

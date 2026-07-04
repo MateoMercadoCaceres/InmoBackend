@@ -197,6 +197,37 @@ router.get('/files/:fileId/download', driveMediaController.downloadFile)
 
 /**
  * @swagger
+ * /admin/drive/files/{fileId}/view:
+ *   get:
+ *     summary: Render a cached, resized version of a file for inline display
+ *     description: >
+ *       Serves Google Drive's pre-resized thumbnail (falling back to the full file when
+ *       no thumbnail exists) with long-lived Cache-Control/ETag headers, so browsers and
+ *       Next's image optimizer don't re-fetch Drive on every render. Intended as the
+ *       source for <img>/next/image tags — use /download for actual file downloads.
+ *     tags: [Drive]
+ *     parameters:
+ *       - in: path
+ *         name: fileId
+ *         required: true
+ *         schema: { type: string }
+ *         description: Google Drive file ID
+ *       - in: query
+ *         name: size
+ *         schema: { type: integer, default: 400, minimum: 100, maximum: 2000 }
+ *         description: Target longest-edge size in pixels
+ *     responses:
+ *       200:
+ *         description: Image stream
+ *         content:
+ *           image/*: {}
+ *       304:
+ *         description: Not modified (client's cached copy is still valid)
+ */
+router.get('/files/:fileId/view', driveMediaController.viewThumbnail)
+
+/**
+ * @swagger
  * /admin/drive/folders/{folderId}/download:
  *   get:
  *     summary: Download an entire Drive folder as a ZIP archive

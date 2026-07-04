@@ -118,6 +118,26 @@ async function getFileStream(fileId) {
   return { stream: response.data, name: meta.name, mimeType: meta.mimeType }
 }
 
+// Serves Google's own pre-resized thumbnail instead of streaming the full-resolution
+// original — much smaller payload, and Drive's thumbnail CDN does the resizing for free.
+// Returns null when Drive has no thumbnail for this file (e.g. non-image), so the
+// caller can fall back to the full file.
+async function getThumbnail(fileId, size) {
+  const drive = await getDriveClient()
+  const { data: meta } = await drive.files.get({
+    fileId,
+    fields: 'thumbnailLink, mimeType'
+  })
+
+  if (!meta.thumbnailLink) return null
+
+  const url = meta.thumbnailLink.replace(/=s\d+$/, `=s${size}`)
+  const response = await fetch(url)
+  if (!response.ok || !response.body) return null
+
+  return { stream: response.body, mimeType: response.headers.get('content-type') || meta.mimeType }
+}
+
 async function createFolderZipStream(folderId) {
   const drive = await getDriveClient()
   const [files, folderMeta] = await Promise.all([
@@ -149,5 +169,6 @@ module.exports = {
   uploadRaw,
   deleteMedia,
   getFileStream,
+  getThumbnail,
   createFolderZipStream
 }

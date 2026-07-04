@@ -1,5 +1,6 @@
 const { supabase } = require('../config/supabase')
 const DatabaseError = require('../errors/DatabaseError')
+const { buildSlugAssignments } = require('../utils/propertySlug')
 
 const FIELDS = [
   'id', 'type_id', 'title', 'category', 'captor', 'description', 'availability_status',
@@ -53,6 +54,24 @@ async function findById(id) {
   return data
 }
 
+// No slug column exists on the table, so slugs are derived from `title` on read.
+async function findAllTitles() {
+  const { data, error } = await supabase
+    .from('properties')
+    .select('id, title')
+    .order('id', { ascending: true })
+
+  if (error) throw new DatabaseError(error.message)
+  return data
+}
+
+async function findBySlug(slug) {
+  const rows = await findAllTitles()
+  const { slugToId } = buildSlugAssignments(rows)
+  const id = slugToId.get(slug)
+  return id ? findById(id) : null
+}
+
 async function create(payload) {
   const { data, error } = await supabase
     .from('properties')
@@ -85,4 +104,4 @@ async function remove(id) {
   if (error) throw new DatabaseError(error.message)
 }
 
-module.exports = { findAll, findById, create, update, remove }
+module.exports = { findAll, findById, findAllTitles, findBySlug, create, update, remove }
