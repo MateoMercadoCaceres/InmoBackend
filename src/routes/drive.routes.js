@@ -177,6 +177,27 @@ router.delete('/media/:mediaId', driveMediaController.deleteMedia)
 
 /**
  * @swagger
+ * /admin/drive/files/{fileId}:
+ *   delete:
+ *     summary: Delete a file directly from Drive by its Drive file ID
+ *     description: >
+ *       Also removes the matching property_media row if one exists. Intended for the
+ *       folder gallery UI, which only has Drive file IDs (not property_media row IDs).
+ *     tags: [Drive]
+ *     parameters:
+ *       - in: path
+ *         name: fileId
+ *         required: true
+ *         schema: { type: string }
+ *         description: Google Drive file ID
+ *     responses:
+ *       204:
+ *         description: Deleted
+ */
+router.delete('/files/:fileId', driveMediaController.deleteFile)
+
+/**
+ * @swagger
  * /admin/drive/files/{fileId}/download:
  *   get:
  *     summary: Download a single file from Drive

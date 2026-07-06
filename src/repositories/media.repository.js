@@ -35,6 +35,17 @@ async function findById(id) {
   return data
 }
 
+async function findByDriveFileId(fileId) {
+  const { data, error } = await supabase
+    .from('property_media')
+    .select(FIELDS)
+    .ilike('media_folder_url', `%${fileId}%`)
+    .maybeSingle()
+
+  if (error) throw new DatabaseError(error.message)
+  return data
+}
+
 async function remove(id) {
   const { error } = await supabase
     .from('property_media')
@@ -53,4 +64,4 @@ async function removeByProperty(property_id) {
   if (error) throw new DatabaseError(error.message)
 }
 
-module.exports = { findByProperty, findById, create, remove, removeByProperty }
+module.exports = { findByProperty, findById, findByDriveFileId, create, remove, removeByProperty }
