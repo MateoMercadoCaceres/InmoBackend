@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [base]
+  pull_request:
+    branches: [base]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # No test suite exists yet (npm test is a placeholder). This boots the
+      # server with harmless dummy credentials — no real Supabase/Google Drive
+      # calls happen at import time, only when a route actually needs them —
+      # so it catches syntax/require-time regressions without touching any
+      # live service or needing real secrets.
+      - name: Boot smoke test
+        env:
+          PORT: 9382
+          ALLOWED_ORIGIN: http://localhost:3000
+          SUPABASE_URL: https://placeholder.supabase.co
+          SUPABASE_ANON_KEY: placeholder
+          SUPABASE_SERVICE_KEY: placeholder
+          GOOGLE_CLIENT_ID: placeholder
+          GOOGLE_CLIENT_SECRET: placeholder
+          GOOGLE_REDIRECT_URI: http://localhost:9382/api/admin/drive/callback
+          PROPERTIES_ROOT_FOLDER_ID: placeholder
+        run: |
+          node index.js &
+          PID=$!
+          for i in $(seq 1 10); do
+            if curl -sf http://localhost:9382/api-docs > /dev/null; then
+              echo "Server is up"
+              kill $PID
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Server did not respond in time"
+          kill $PID 2>/dev/null || true
+          exit 1
