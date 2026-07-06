@@ -48,6 +48,11 @@ const deleteMedia = asyncHandler(async (req, res) => {
   res.status(204).send()
 })
 
+const deleteFile = asyncHandler(async (req, res) => {
+  await driveMediaService.deleteFile(req.params.fileId)
+  res.status(204).send()
+})
+
 const downloadFile = asyncHandler(async (req, res) => {
   const { stream, name, mimeType } = await driveMediaService.getFileStream(req.params.fileId)
   res.setHeader('Content-Disposition', `attachment; filename="${name}"`)
@@ -99,6 +104,7 @@ module.exports = {
   uploadMedia,
   uploadRaw,
   deleteMedia,
+  deleteFile,
   downloadFile,
   viewThumbnail,
   downloadFolder

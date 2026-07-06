@@ -102,6 +102,23 @@ async function deleteMedia(mediaId) {
   await mediaRepository.remove(mediaId)
 }
 
+// Deletes a Drive file directly by its Drive file ID — used by the folder
+// gallery, which only knows Drive file IDs (not property_media row IDs).
+// Also removes the matching property_media row if one exists; files uploaded
+// via uploadRaw (e.g. advisor photos) have no such row, so that part is best-effort.
+async function deleteFile(fileId) {
+  const drive = await getDriveClient()
+
+  try {
+    await drive.files.delete({ fileId })
+  } catch (err) {
+    if (err.code !== 404 && err.status !== 404) throw err
+  }
+
+  const record = await mediaRepository.findByDriveFileId(fileId)
+  if (record) await mediaRepository.remove(record.id)
+}
+
 async function getFileStream(fileId) {
   const drive = await getDriveClient()
 
@@ -168,6 +185,7 @@ module.exports = {
   uploadMedia,
   uploadRaw,
   deleteMedia,
+  deleteFile,
   getFileStream,
   getThumbnail,
   createFolderZipStream
