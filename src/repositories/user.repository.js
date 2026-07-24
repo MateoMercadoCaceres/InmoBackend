@@ -1,7 +1,22 @@
 const { supabase } = require('../config/supabase')
 const DatabaseError = require('../errors/DatabaseError')
 
-const FIELDS = 'id, name, email, role'
+// cell_phone is stored as int8 in the DB; the API keeps exposing it as `phone`
+// so existing consumers don't need to change.
+const FIELDS = 'id, name, email, role, cell_phone'
+
+function mapUser(row) {
+  if (!row) return row
+  const { cell_phone, ...rest } = row
+  return { ...rest, phone: cell_phone != null ? String(cell_phone) : null }
+}
+
+function toDbPayload(payload) {
+  if (payload.phone === undefined) return payload
+  const { phone, ...rest } = payload
+  const digits = phone ? String(phone).replace(/\D/g, '') : ''
+  return { ...rest, cell_phone: digits ? Number(digits) : null }
+}
 
 async function findAll() {
   const { data, error } = await supabase
@@ -9,7 +24,7 @@ async function findAll() {
     .select(FIELDS)
 
   if (error) throw new DatabaseError(error.message)
-  return data
+  return data.map(mapUser)
 }
 
 async function findById(id) {
@@ -20,7 +35,7 @@ async function findById(id) {
     .single()
 
   if (error && error.code !== 'PGRST116') throw new DatabaseError(error.message)
-  return data
+  return mapUser(data)
 }
 
 async function findByEmail(email) {
@@ -31,30 +46,30 @@ async function findByEmail(email) {
     .maybeSingle()
 
   if (error) throw new DatabaseError(error.message)
-  return data
+  return mapUser(data)
 }
 
 async function create(payload) {
   const { data, error } = await supabase
     .from('users')
-    .insert(payload)
+    .insert(toDbPayload(payload))
     .select(FIELDS)
     .single()
 
   if (error) throw new DatabaseError(error.message)
-  return data
+  return mapUser(data)
 }
 
 async function update(id, payload) {
   const { data, error } = await supabase
     .from('users')
-    .update(payload)
+    .update(toDbPayload(payload))
     .eq('id', id)
     .select(FIELDS)
     .single()
 
   if (error) throw new DatabaseError(error.message)
-  return data
+  return mapUser(data)
 }
 
 async function remove(id) {
